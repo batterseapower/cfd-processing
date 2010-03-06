@@ -159,7 +159,7 @@ for label, wall_function in [("theory", theory_wall_function)] + [("pl=" + str(p
     yplus, uplus = zip(*wall_function)
     plt.semilogx(yplus, uplus, label=label)
 
-plt.legend()
+plt.legend(loc="upper left")
 plt.savefig("yplus-vs-uplus")
 
 # scaled velocity:
@@ -172,5 +172,5 @@ for pl, scaled_velocity_profile in pl_scaled_velocity_profiles.items():
     scaled_velocity, scaled_y = zip(*scaled_velocity_profile)
     plt.plot(scaled_velocity, scaled_y, label="pl=" + str(pl))
 
-plt.legend()
+plt.legend(loc="upper left")
 plt.savefig("scaled-velocity-profile")
