@@ -19,55 +19,75 @@ def unions(sets):
         allset.update(aset)
     return allset
 
+def printconstants(title, ks):
+    print title
+    for name, value in ks.items():
+        print "  ", name, "=", value
+
 
 # NB: fixed for the model
 wall_to_wall_distance = 0.05
 width = 0.05
 height = 0.05
+d_h = (width * height) / (2 * (width + height)) # Hydralic diameter
 
-
-# NB: these are for base = 0.01
-wall_shear_stress = 111.9
 density = 1.18415
 mu = 0.00001855
 
-# These are base-independent:
-ustar = sqrt(wall_shear_stress / density)
-d_v = mu / ustar
-d_h = (width * height) / (2 * (width + height)) # Hydralic diameter
-
-
-def yplus(wall_distance):
-    return wall_distance / d_v
-
-def uplus(velocity):
-    return velocity / ustar
 
 def uplus_theory(yplus):
     # Computation Methods for Fluid Dynamics, p298
     if yplus <= 5:
         return yplus
     else:
-        k = 0.14
+        k = 0.41
         b = 5
         return (1 / k) * log(yplus) + b
 
 
-# Show computed values
-print "Computed constants:"
-for name, value in { "ustar" : ustar, "d_v" : d_v, "d_h" : d_h }.items():
-    print name, "=", value
+# Print some information about the model
+printconstants("Model constants:", { "width" : width, "height" : height, "d_h" : d_h, "density" : density, "mu" : mu })
 
 
 # Pull in data
 pl_wall_functions = {}
 pl_scaled_velocity_profiles = {}
 for file in sys.argv[1:]:
+    print ""
+    print "#", file
+    
     # pl29sf1.13base0.1distance.csv
     # r"pl(\d+)sf([\d\.]+)base([\d\.]+)distance"
+    
+    # Parse our prism layer count
     m = re.search(r"pl(\d+)", file)
-    pl = int(m.group(1))
-    print "Prism layer count", pl, "for", file
+    if m is None:
+        print "Could not determine prism layer count: add plN to the file name"
+        sys.exit(1)
+    else:
+        pl = int(m.group(1))
+    
+    # Parse out wall shear stress
+    m = re.search(r"tw([\d\.]+)", file)
+    if m is None:
+        print "Count not determine wall shear stress: add twN.M to the file name"
+        sys.exit(1)
+    else:
+        #wall_shear_stress = 111.9
+        wall_shear_stress = float(m.group(1))
+    
+    # Setup physical constants for this model
+    ustar = sqrt(wall_shear_stress / density)
+    d_v = mu / ustar
+    
+    def yplus(wall_distance):
+        return wall_distance / d_v
+
+    def uplus(velocity):
+        return velocity / ustar
+
+    # Print some information about the simulation
+    printconstants("Simulation constants:", { "pl" : pl, "wall shear stress" : wall_shear_stress, "ustar" : ustar, "d_v" : d_v })
     
     # "Position [0.0, 1.0, 0.0] (m)-point 1 (m)","Velocity: Magnitude-point 1 (m/s)"
     # 0.0,35.15489668712291
@@ -112,7 +132,7 @@ for file in sys.argv[1:]:
     velocity_average = velocity_average_accumulator / distance_accumulator
 
     # Intermediate results
-    print "Average velocity", velocity_average
+    printconstants("Simulation summary:", { "average velocity" : velocity_average, "maximum velocity" : max([velocity for position, velocity in raw_velocity_positions]) })
 
     # Build data for graphing
     half_velocity_profile = [(position, velocity) for position, velocity in velocity_profile if position <= (wall_to_wall_distance / 2)]
