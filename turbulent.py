@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+from glob import glob
 import sys
 import os.path
 import re
@@ -35,7 +36,7 @@ printconstants("Model constants:", [("width", width), ("height", height), ("d_h"
 # Pull in data
 sim_wall_functions = {}
 sim_scaled_velocity_profiles = {}
-for file in sys.argv[1:]:
+for file in concat(map(glob, sys.argv[1:])):
     print ""
     print "#", file
     

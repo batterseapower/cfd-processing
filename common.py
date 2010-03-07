@@ -1,6 +1,9 @@
 import csv
 import sys
 
+def concat(xss):
+    return sum(xss, [])
+
 def drop(n, xs):
     for x in xs:
         if n > 0:
