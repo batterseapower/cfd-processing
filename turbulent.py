@@ -9,9 +9,21 @@ from math import sqrt, log
 from common import *
 
 
-# NB: fixed for the model
+directory = sys.argv[1]
+
+
+# Parse out width
+if "square" in directory:
+    width = 0.05
+else:
+    m = re.search(r"width([\d\.]+)", directory)
+    if m is None:
+        print "Count not determine duct width: add widthN.M to the file name"
+        sys.exit(1)
+    else:
+        width = float(m.group(1))
+
 wall_to_wall_distance = 0.05
-width = 0.05
 height = 0.05
 d_h = (width * height) / (2 * (width + height)) # Hydralic diameter
 
@@ -36,7 +48,7 @@ printconstants("Model constants:", [("width", width), ("height", height), ("d_h"
 # Pull in data
 sim_wall_functions = {}
 sim_scaled_velocity_profiles = {}
-for file in concat(map(glob, sys.argv[1:])):
+for file in glob(os.path.join(directory, "*.csv")):
     print ""
     print "#", file
     
@@ -118,10 +130,10 @@ for sim, wall_function in [("theory", theory_wall_function)] + sim_wall_function
     plt.semilogx(yplus, uplus, label=sim)
 
 plt.legend(loc="upper left")
-plt.savefig("yplus-vs-uplus")
+plt.savefig(os.path.join(directory, "yplus-vs-uplus"))
 
 plt.axis([0.1, 110, 0, 25])
-plt.savefig("yplus-vs-uplus-experimental")
+plt.savefig(os.path.join(directory, "yplus-vs-uplus-experimental"))
 
 # scaled velocity:
 plt.clf()
@@ -135,7 +147,7 @@ for sim, scaled_velocity_profile in sim_scaled_velocity_profiles.items():
     plt.plot(scaled_velocity, scaled_y, label=sim)
 
 plt.legend(loc="upper left")
-plt.savefig("scaled-velocity-profile")
+plt.savefig(os.path.join(directory, "scaled-velocity-profile"))
 
 
 # Build the superimposed data image
@@ -153,7 +165,7 @@ experimental = Image.open("experimental.png")
 experimental_bottom_left = (88, 108) # x = 0.1, y = 0
 experimental_top_right = (experimental_width - 82, experimental_height - 16)  # x = 100, y = 25
 
-mine = Image.open("yplus-vs-uplus-experimental.png")
+mine = Image.open(os.path.join(directory, "yplus-vs-uplus-experimental.png"))
 (mine_width, mine_height) = mine.size
 mine_bottom_left = (127, 81)
 mine_top_right = (mine_width - 111, mine_height - 81)
@@ -170,4 +182,4 @@ transform = minus_point(mine_bottom_left, multiply_point(scale, experimental_bot
 experimental = experimental.offset(int(round(transform[0])), -int(round(transform[1])) + 8) # FIXME: fudge factor!
 
 blended = Image.blend(mine, experimental.crop((0, 0, mine.size[0], mine.size[1])), 0.3)
-blended.save("yplus-vs-uplus-experimental-combined.png", "PNG")
+blended.save(os.path.join(directory, "yplus-vs-uplus-experimental.png"), "PNG")

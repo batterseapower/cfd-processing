@@ -1,2 +1,2 @@
-python turbulent.py data/turbulent/*.csv
+python turbulent.py data/turbulent-square
 pause

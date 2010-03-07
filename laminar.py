@@ -9,9 +9,21 @@ from math import sqrt, log, cos, cosh, tanh, sinh, pi
 from common import *
 
 
-# NB: fixed for the model
+directory = sys.argv[1]
+
+
+# Parse out width
+if "square" in directory:
+    width = 0.05
+else:
+    m = re.search(r"width([\d\.]+)", directory)
+    if m is None:
+        print "Count not determine duct width: add widthN.M to the file name"
+        sys.exit(1)
+    else:
+        width = float(m.group(1))
+
 wall_to_wall_distance = 0.05
-width = 0.05
 height = 0.05
 length = 0.5
 d_h = (width * height) / (2 * (width + height)) # Hydralic diameter
@@ -23,6 +35,7 @@ pressure = 0.05
 c = width / 2
 b = height / 2
 pressure_gradient = -pressure / length
+
 
 q_infinite_sum = infinite_sum(lambda n: tanh(0.5 * n * pi) / pow(n, 5))
 q = pow(b, 4) / (6 * mu) * pressure_gradient * -(1 - 192 / pow(pi, 5) * q_infinite_sum)
@@ -40,7 +53,7 @@ printconstants("Model constants:", [("width", width), ("height", height), ("leng
 
 # Pull in data
 sim_velocity_profiles = {}
-for file in concat(map(glob, sys.argv[1:])):
+for file in glob(os.path.join(directory, "*.csv")):
     print ""
     print "#", file
     
@@ -83,4 +96,4 @@ for sim, velocity_profile in [("theory", theory_velocity_profile)] + sim_velocit
     plt.plot(positions, velocities, label=sim)
 
 plt.legend(loc="lower center")
-plt.savefig("velocity-profile")
+plt.savefig(os.path.join(directory, "velocity-profile"))

@@ -1,2 +1,2 @@
-python laminar.py data/laminar/*.csv
+python laminar.py data/laminar-square
 pause
