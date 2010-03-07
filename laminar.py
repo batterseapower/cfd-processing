@@ -53,19 +53,23 @@ printconstants("Model constants:", [("width", width), ("height", height), ("leng
 
 # Pull in data
 sim_velocity_profiles = {}
+sim_scaled_velocity_profiles = {}
 for file in glob(os.path.join(directory, "*.csv")):
     print ""
     print "#", file
     
     # pl29sf1.13base0.1distance.csv
     # r"pl(\d+)sf([\d\.]+)base([\d\.]+)distance"
-    file_base = os.path.splitext(file)[0]
+    file_base = os.path.basename(os.path.splitext(file)[0])
     
     # Extract data from CSV
     velocity_average, velocity_profile = extractdata(file)
+    velocity_max = max([velocity for position, velocity in velocity_profile])
     
     # Build data for graphing
     sim_velocity_profiles[file_base] = velocity_profile
+    wall_to_center_distance = wall_to_wall_distance / 2.0
+    sim_scaled_velocity_profiles[file_base] = [(1 - (position / wall_to_center_distance), velocity / velocity_max) for position, velocity in velocity_profile if 0.0 < position <= wall_to_center_distance]
 
 
 # Find the theoretical velocity profile
@@ -97,3 +101,17 @@ for sim, velocity_profile in [("theory", theory_velocity_profile)] + sim_velocit
 
 plt.legend(loc="lower center")
 plt.savefig(os.path.join(directory, "velocity-profile"))
+
+# scaled velocity:
+plt.clf()
+plt.figure(figsize=(10, 8), dpi=80)
+
+plt.xlabel("2y/h")
+plt.ylabel("v/v_max")
+
+for sim, scaled_velocity_profile in sim_scaled_velocity_profiles.items():
+    scaled_position, scaled_velocity = zip(*scaled_velocity_profile)
+    plt.plot(scaled_position, scaled_velocity, label=sim)
+
+plt.legend(loc="lower left")
+plt.savefig(os.path.join(directory, "scaled-velocity-profile"))

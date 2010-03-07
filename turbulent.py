@@ -54,19 +54,7 @@ for file in glob(os.path.join(directory, "*.csv")):
     
     # pl29sf1.13base0.1distance.csv
     # r"pl(\d+)sf([\d\.]+)base([\d\.]+)distance"
-    file_base = os.path.splitext(file)[0]
-    
-    # Parse our prism layer count
-    m = re.search(r"pl(\d+)", file_base)
-    if m is None:
-        print "Could not determine prism layer count: add plN to the file name"
-        sys.exit(1)
-    else:
-        pl = int(m.group(1))
-    
-    # Parse out stretch factor
-    m = re.search(r"sf([\d\.]+)", file_base)
-    sf = m is None and "unknown" or m.group(1)
+    file_base = os.path.basename(os.path.splitext(file)[0])
     
     # Parse out wall shear stress
     m = re.search(r"tw([\d\.]+)", file_base)
@@ -88,7 +76,7 @@ for file in glob(os.path.join(directory, "*.csv")):
         return velocity / ustar
 
     # Print some information about the simulation
-    printconstants("Simulation constants:", [("pl", pl), ("wall shear stress", wall_shear_stress), ("ustar", ustar), ("d_v", d_v)])
+    printconstants("Simulation constants:", [("wall shear stress", wall_shear_stress), ("ustar", ustar), ("d_v", d_v)])
     
     # Extract data from CSV
     velocity_average, velocity_profile = extractdata(file, extra_stats = lambda positions: [("minimum non-zero y+", yplus(min([position for position in positions if position > 0.0])))])
@@ -97,9 +85,8 @@ for file in glob(os.path.join(directory, "*.csv")):
     half_velocity_profile = [(position, velocity) for position, velocity in velocity_profile if 0.0 < position <= (wall_to_wall_distance / 2)]
     
     # Build data for graphing
-    sim = "pl=" + str(pl) + ",sf=" + sf
-    sim_wall_functions[sim] = [(yplus(position), uplus(velocity)) for position, velocity in half_velocity_profile]
-    sim_scaled_velocity_profiles[sim] = [(velocity / velocity_average, 2 * position / d_h) for position, velocity in half_velocity_profile]
+    sim_wall_functions[file_base] = [(yplus(position), uplus(velocity)) for position, velocity in half_velocity_profile]
+    sim_scaled_velocity_profiles[file_base] = [(velocity / velocity_average, 2 * position / d_h) for position, velocity in half_velocity_profile]
 
 
 # Find the theoretical wall function
