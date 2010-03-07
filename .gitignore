@@ -1,3 +1,6 @@
+# Build artifacts
+*.pyc
+
 # Output graphs
 *.png
 
