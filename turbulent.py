@@ -116,9 +116,11 @@ for sim, wall_function in [("theory", theory_wall_function)] + sim_wall_function
     yplus, uplus = zip(*wall_function)
     plt.semilogx(yplus, uplus, label=sim)
 
-#plt.axis([0.1, 110, 0, 25])
 plt.legend(loc="upper left")
 plt.savefig("yplus-vs-uplus")
+
+plt.axis([0.1, 110, 0, 25])
+plt.savefig("yplus-vs-uplus-experimental")
 
 # scaled velocity:
 plt.clf()
@@ -133,3 +135,38 @@ for sim, scaled_velocity_profile in sim_scaled_velocity_profiles.items():
 
 plt.legend(loc="upper left")
 plt.savefig("scaled-velocity-profile")
+
+
+# Build the superimposed data image
+from PIL import *
+from PIL import Image
+
+lift_point = lambda f: lambda p1, p2: (f(p1[0], p2[0]), f(p1[1], p2[1]))
+minus_point = lift_point(lambda x1, x2: x1 - x2)
+divide_point = lift_point(lambda x1, x2: x1 / float(x2))
+multiply_point = lift_point(lambda x1, x2: x1 * x2)
+
+# Discover the boxes in both images that we want to superimpose
+experimental = Image.open("experimental.png")
+(experimental_width, experimental_height) = experimental.size
+experimental_bottom_left = (88, 108) # x = 0.1, y = 0
+experimental_top_right = (experimental_width - 82, experimental_height - 16)  # x = 100, y = 25
+
+mine = Image.open("yplus-vs-uplus-experimental.png")
+(mine_width, mine_height) = mine.size
+mine_bottom_left = (127, 81)
+mine_top_right = (mine_width - 111, mine_height - 81)
+
+# Begin by scaling the experimental data correctly so the axis-enclosed boxes look the same
+scale = divide_point(minus_point(mine_top_right, mine_bottom_left), minus_point(experimental_top_right, experimental_bottom_left))
+experimental = experimental.resize(multiply_point(scale, experimental.size))
+#experimental.save("yplus-vs-uplus-experimental-SCALED.png", "PNG")
+
+# Now work out the transform to shift the experimental data so the origins match
+#print mine_bottom_left, "-", multiply_point(scale, experimental_bottom_left)
+transform = minus_point(mine_bottom_left, multiply_point(scale, experimental_bottom_left))
+#print transform
+experimental = experimental.offset(int(round(transform[0])), -int(round(transform[1])) + 8) # FIXME: fudge factor!
+
+blended = Image.blend(mine, experimental.crop((0, 0, mine.size[0], mine.size[1])), 0.3)
+blended.save("yplus-vs-uplus-experimental-combined.png", "PNG")
