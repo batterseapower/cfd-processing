@@ -106,19 +106,20 @@ def extractdata(file, extra_stats=lambda _: []):
     else:
         velocity_profile = []
         
-        # Assume the data for adjacent positions are adjacent in a position-indexed file
+        # For a position-indexed file we can safely simply sort the data by position and look for runs,
+        # which is more reliable
         velocity_in_run = None
         first_position_in_run = None
-        for position, velocity in raw_velocity_positions:
+        for position, velocity in sorted(raw_velocity_positions):
             if velocity != velocity_in_run:
                 if velocity_in_run is not None:
-                    velocity_profile.append(((position + first_position_in_run) / 2 , velocity_in_run))
+                    velocity_profile.append(((position + first_position_in_run) / 2, velocity_in_run))
                 
                 first_position_in_run = position
                 velocity_in_run = velocity
         
         if velocity_in_run is not None:
-            velocity_profile.append(((raw_velocity_positions[-1][0] + first_position_in_run) / 2 , velocity_in_run))
+            velocity_profile.append(((position + first_position_in_run) / 2, velocity_in_run))
         
         velocity_profile.sort()
     

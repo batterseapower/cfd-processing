@@ -81,7 +81,7 @@ for file in sys.argv[1:]:
     velocity_average, velocity_profile = extractdata(file, extra_stats = lambda positions: [("minimum non-zero y+", yplus(min([position for position in positions if position > 0.0])))])
     
     # Trim data down to size (especially important if the velocity profile was built from position-indexed information)
-    half_velocity_profile = [(position, velocity) for position, velocity in velocity_profile if position <= (wall_to_wall_distance / 2) and position > 0.0]
+    half_velocity_profile = [(position, velocity) for position, velocity in velocity_profile if 0.0 < position <= (wall_to_wall_distance / 2)]
     
     # Build data for graphing
     sim = "pl=" + str(pl) + ",sf=" + sf
