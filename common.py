@@ -138,6 +138,7 @@ def extractdata(file, extra_stats=lambda _: []):
         last_position = position
     
     velocity_average = velocity_average_accumulator / distance_accumulator
+    velocity_max = max([velocity for position, velocity in velocity_profile])
 
     # Intermediate results
     positions, velocities = zip(*raw_velocity_positions)
@@ -147,4 +148,4 @@ def extractdata(file, extra_stats=lambda _: []):
                                            ("minimum position", min(positions)),
                                            ("maximum position", max(positions))] + extra_stats(positions))
     
-    return velocity_average, velocity_profile
+    return velocity_max, velocity_average, velocity_profile

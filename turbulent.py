@@ -48,6 +48,7 @@ printconstants("Model constants:", [("width", width), ("height", height), ("d_h"
 # Pull in data
 sim_wall_functions = {}
 sim_scaled_velocity_profiles = {}
+sim_scaled_nonhydralic_velocity_profiles = {}
 for file in glob(os.path.join(directory, "*.csv")):
     print ""
     print "#", file
@@ -79,14 +80,16 @@ for file in glob(os.path.join(directory, "*.csv")):
     printconstants("Simulation constants:", [("wall shear stress", wall_shear_stress), ("ustar", ustar), ("d_v", d_v)])
     
     # Extract data from CSV
-    velocity_average, velocity_profile = extractdata(file, extra_stats = lambda positions: [("minimum non-zero y+", yplus(min([position for position in positions if position > 0.0])))])
+    velocity_max, velocity_average, velocity_profile = extractdata(file, extra_stats = lambda positions: [("minimum non-zero y+", yplus(min([position for position in positions if position > 0.0])))])
     
     # Trim data down to size (especially important if the velocity profile was built from position-indexed information)
-    half_velocity_profile = [(position, velocity) for position, velocity in velocity_profile if 0.0 < position <= (wall_to_wall_distance / 2)]
+    wall_to_center_distance = wall_to_wall_distance / 2.0
+    half_velocity_profile = [(position, velocity) for position, velocity in velocity_profile if 0.0 < position <= wall_to_center_distance]
     
     # Build data for graphing
     sim_wall_functions[file_base] = [(yplus(position), uplus(velocity)) for position, velocity in half_velocity_profile]
     sim_scaled_velocity_profiles[file_base] = [(velocity / velocity_average, 2 * position / d_h) for position, velocity in half_velocity_profile]
+    sim_scaled_nonhydralic_velocity_profiles[file_base] = [(1 - (position / wall_to_center_distance), velocity / velocity_max) for position, velocity in half_velocity_profile]
 
 
 # Find the theoretical wall function
@@ -135,6 +138,20 @@ for sim, scaled_velocity_profile in sim_scaled_velocity_profiles.items():
 
 plt.legend(loc="upper left")
 plt.savefig(os.path.join(directory, "scaled-velocity-profile"))
+
+# scaled non-hydralic velocity:
+plt.clf()
+plt.figure(figsize=(10, 8), dpi=80)
+
+plt.xlabel("2y/h")
+plt.ylabel("v/v_max")
+
+for sim, scaled_nonhydralic_velocity_profiles in sim_scaled_nonhydralic_velocity_profiles.items():
+    scaled_position, scaled_velocity = zip(*scaled_nonhydralic_velocity_profiles)
+    plt.plot(scaled_position, scaled_velocity, label=sim)
+
+plt.legend(loc="lower left")
+plt.savefig(os.path.join(directory, "scaled-nonhydralic-velocity-profile"))
 
 
 # Build the superimposed data image

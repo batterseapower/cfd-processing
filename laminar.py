@@ -64,8 +64,7 @@ for file in glob(os.path.join(directory, "*.csv")):
     file_base = os.path.basename(os.path.splitext(file)[0])
     
     # Extract data from CSV
-    velocity_average, velocity_profile = extractdata(file)
-    velocity_max = max([velocity for position, velocity in velocity_profile])
+    velocity_max, velocity_average, velocity_profile = extractdata(file)
     
     # Trim data down to size (especially important if the velocity profile was built from position-indexed information)
     wall_to_center_distance = wall_to_wall_distance / 2.0
